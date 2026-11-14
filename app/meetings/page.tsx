@@ -1,4 +1,4 @@
-import Dropdown from "@/components/Dropdown"
+// import Dropdown from "@/components/Dropdown"
 import MeetingCardList from "@/components/MeetingCardList"
 
 export default function MeetingDetail() {

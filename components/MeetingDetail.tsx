@@ -34,7 +34,7 @@ export default function ProjectCard({meeting}: MeetingDetailProps) {
 
   <div className="grid grid-cols-[180px_1fr] border-b">
     <p className="font-semibold p-3 bg-gray-50">Announcements</p>
-    <p className="p-3">{meeting.announcements.join(", ")}</p>
+    <p className="p-3">{meeting.announcements?.join(", ")}</p>
   </div>
 
   <div className="grid grid-cols-[180px_1fr] border-b">

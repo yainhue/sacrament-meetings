@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = DM_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
 });
 
@@ -14,11 +14,13 @@ export const metadata: Metadata = {
   description: "Plan, organize, and view sacrament meeting details",
 };
 
+const today = new Date().toISOString().split("T")[0];
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body className='Inter'>
-        <Header />
+      <body className={dmSans.className}>
+        <Header today={today}/>
         {children}
         <Footer />
       </body>

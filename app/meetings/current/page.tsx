@@ -1,6 +1,5 @@
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
-import { NextResponse} from 'next/server';
 import { getMeetings } from '@/lib/meetings-db';
 
 export default async function RedirectToCurrentMeeting() {

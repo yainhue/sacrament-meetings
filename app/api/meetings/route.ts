@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse} from 'next/server';
 import { getMeetings } from '@/lib/meetings-db';
 
 // GET endpoint that gets all of the Meetings and allows for optional filtering with ?date=
@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const meetings = getMeetings(date);
  
     if (meetings == null){
-    return NextResponse.json({ error: `Meetings not found` }, { status: 400 })
+    return NextResponse.json({ error: `Meetings not found - 404` }, { status: 404 })
     }
  
   return Response.json(meetings);

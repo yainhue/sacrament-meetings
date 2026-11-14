@@ -95,6 +95,6 @@
   }
 
   .active {
-    @apply text-blue-600 underline font-bold;
+    @apply text-blue-900 underline font-bold;
   }
 }

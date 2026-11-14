@@ -1,24 +1,30 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextResponse} from 'next/server';
 import { getMeetingById } from '@/lib/meetings-db';
 
 // GET endpoint that gets all of the Meetings and allows for optional filtering with ?date=
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
-)  {
-    const resolvedParams = await params;
-    const id = Number(resolvedParams.id);
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
 
-        if (Number.isNaN(id)) {
-    return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+  const meetingId = Number(id);
+
+  if (Number.isNaN(meetingId)) {
+    return NextResponse.json(
+      { error: "Invalid id - 400" },
+      { status: 400 }
+    );
   }
 
-  const meeting = getMeetingById(id);
-  
-  if (meeting == null){
-    return NextResponse.json({ error: `Meeting not found with the ID ${id}` }, { status: 400 })
-    
-    }
+  const meeting = getMeetingById(meetingId);
+
+  if (!meeting) {
+    return NextResponse.json(
+      { error: `Meeting not found with the ID ${meetingId} - 404` },
+      { status: 404 }
+    );
+  }
 
   return NextResponse.json(meeting);
 }

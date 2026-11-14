@@ -1,15 +1,13 @@
 "use client";
 
 import NavLinks from '../components/NavLinks';
-import { useEffect, useState, Suspense } from "react";
+import {Suspense } from "react";
 
-export default function Header() {
+interface HeaderProps {
+  today: string;
+}
 
-const [today, setToday] = useState("");
-
-  useEffect(() => {
-    setToday(new Date().toISOString().split("T")[0]);
-  }, []);
+export default function Header({ today }: HeaderProps) {
 
   return (
     <header className="bg-gray-200 py-4 shadow-md flex justify-around">
