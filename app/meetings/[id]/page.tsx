@@ -19,12 +19,19 @@ try {
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
+
+
+   console.log("1 CONSOLE.LOG = " + process.env.VERCEL_UR);
+  console.log("2 CONSOLE.LOG = " + host);
+  
 response = await fetch(
   `${host}/api/meetings/${id}`
       ,{
       cache: "force-cache",
     }
 );
+
+  console.log("3 CONSOLE.LOG = " + response);
 
   if (!response.ok) {
     throw new Error(`HTTP Error ${response.status}`);
