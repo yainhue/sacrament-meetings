@@ -13,13 +13,18 @@ export default async function Meeting({
 
  let response;
 
+ 
 try {
-  response = await fetch(
-    `/api/meetings/${id}`,
-    {
+  const host = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
+response = await fetch(
+  `${host}/api/meetings/${id}`
+      ,{
       cache: "force-cache",
     }
-  );
+);
 
   if (!response.ok) {
     throw new Error(`HTTP Error ${response.status}`);
