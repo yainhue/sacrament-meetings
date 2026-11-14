@@ -15,7 +15,7 @@ export default async function Meeting({
 
 try {
   response = await fetch(
-    `http://localhost:3000/api/meetings/${id}`,
+    `/api/meetings/${id}`,
     {
       cache: "force-cache",
     }
