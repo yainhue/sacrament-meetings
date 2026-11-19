@@ -11,7 +11,7 @@ const sunday = new Date(today);
 sunday.setDate(today.getDate() - dayOfWeek); // roll back to Sunday
 const sundayString = sunday.toISOString().split("T")[0];
 
-const meeting = getMeetings(sundayString)
+const meeting = await getMeetings(sundayString)
 
 if (meeting.length > 0){
 
@@ -22,6 +22,7 @@ if (meeting.length > 0){
   );
   
 }
+
 // else
 return (
     <div>

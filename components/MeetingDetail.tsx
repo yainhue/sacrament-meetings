@@ -1,12 +1,28 @@
-import {SacramentMeeting} from "@/lib/types"
+import { getMeetingById } from "@/lib/meetings-db";
 
 interface MeetingDetailProps {
-  meeting: SacramentMeeting;
+  id: number;
 }
-        
-export default function ProjectCard({meeting}: MeetingDetailProps) {
 
-  const meetingTypeCapitalized = meeting.meetingType.charAt(0).toUpperCase() + meeting.meetingType.slice(1);
+export default async function MeetingDetail({
+  id,
+}: MeetingDetailProps) {
+  const meeting = await getMeetingById(id);
+
+  if (!meeting) {
+    return (
+      <div>
+        <h1 className="text-center mt-15">
+          Meeting not found with ID {id}
+        </h1>
+        <p className="text-center">Please try again with a valid ID number or take a look at the list of meetings.</p>
+      </div>
+    );
+  }
+
+  const meetingTypeCapitalized =
+    meeting.meetingType.charAt(0).toUpperCase() +
+    meeting.meetingType.slice(1);
   
   return (
     <article className="p-4 rounded flex gap-22 flex-col">

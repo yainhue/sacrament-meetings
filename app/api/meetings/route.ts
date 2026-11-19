@@ -1,14 +1,25 @@
-import { NextResponse} from 'next/server';
-import { getMeetings } from '@/lib/meetings-db';
+import { NextResponse } from "next/server";
+import { getMeetings } from "@/lib/meetings-db";
 
-// GET endpoint that gets all of the Meetings and allows for optional filtering with ?date=
 export async function GET(request: Request) {
-  const date = new URL(request.url).searchParams.get('date'); // for example, "2026-05-03" or null
-  const meetings = getMeetings(date);
- 
-    if (meetings == null){
-    return NextResponse.json({ error: `Meetings not found - 404` }, { status: 404 })
-    }
- 
-  return Response.json(meetings);
+  const param = new URL(request.url).searchParams.get("date");
+
+  let meetings;
+
+  // if a param parameter was passed, use it as query param and get meetings, otherwise get all meetings
+  if (param) {
+    meetings = await getMeetings(param);
+  }
+  else{
+    meetings = await getMeetings();
+  }
+
+  if (meetings.length === 0) {
+    return NextResponse.json(
+      { error: "Meetings not found - 404" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(meetings);
 }
