@@ -4,31 +4,25 @@ import { sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import {Hymn, SacramentMeeting, SpeakerItem, WardBusinessItem} from "@/lib/types"
+import { Hymn, SpeakerItem, WardBusinessItem } from "@/lib/types";
 
 const MeetingFormSchema = z.object({
   date: z.string().min(1, "Date is required."),
   meetingType: z.string().min(1, "Meeting type is required."),
 
-  presiding: z.string().min(
-    2,
-    "Presiding must contain at least 2 characters."
-  ),
+  presiding: z.string().min(2, "Presiding must contain at least 2 characters."),
 
-  conducting: z.string().min(
-    2,
-    "Conducting must contain at least 2 characters."
-  ),
+  conducting: z
+    .string()
+    .min(2, "Conducting must contain at least 2 characters."),
 
-  openingPrayer: z.string().min(
-    2,
-    "Opening prayer must contain at least 2 characters."
-  ),
+  openingPrayer: z
+    .string()
+    .min(2, "Opening prayer must contain at least 2 characters."),
 
-  closingPrayer: z.string().min(
-    2,
-    "Closing prayer must contain at least 2 characters."
-  ),
+  closingPrayer: z
+    .string()
+    .min(2, "Closing prayer must contain at least 2 characters."),
 
   openingHymnNumber: z.coerce
     .number()
@@ -48,21 +42,22 @@ const MeetingFormSchema = z.object({
     .min(1)
     .max(1300),
 
-  openingHymnTitle: z.string()
+  openingHymnTitle: z
+    .string()
     .min(1, "Opening hymn title is required.")
     .max(200),
 
-  sacramentHymnTitle: z.string()
+  sacramentHymnTitle: z
+    .string()
     .min(1, "Sacrament hymn title is required.")
     .max(200),
 
-  closingHymnTitle: z.string()
+  closingHymnTitle: z
+    .string()
     .min(1, "Closing hymn title is required.")
     .max(200),
 
-  stakeBusiness: z.coerce
-    .boolean()
-    .optional(),
+  stakeBusiness: z.coerce.boolean().optional(),
 });
 
 export type State = {
@@ -89,10 +84,16 @@ export type State = {
 };
 
 export async function deleteMeeting(id: string) {
-  await sql`
+  try {
+    await sql`
     DELETE FROM meetings
     WHERE id = ${id}
   `;
+  } catch (error) {
+    console.log(error);
+
+    throw new Error("Database Error: Unable to delete meeting.");
+  }
 
   revalidatePath("/meetings");
   redirect("/meetings");
@@ -100,139 +101,112 @@ export async function deleteMeeting(id: string) {
 
 export async function createMeeting(
   prevState: State,
-  formData: FormData
+  formData: FormData,
 ): Promise<State> {
+  const raw = {
+    date: formData.get("date"),
+    meetingType: formData.get("meetingType"),
 
-const raw = {
-  date: formData.get("date"),
-  meetingType: formData.get("meetingType"),
+    presiding: formData.get("presiding"),
+    conducting: formData.get("conducting"),
 
-  presiding: formData.get("presiding"),
-  conducting: formData.get("conducting"),
+    openingPrayer: formData.get("openingPrayer"),
+    closingPrayer: formData.get("closingPrayer"),
 
-  openingPrayer: formData.get("openingPrayer"),
-  closingPrayer: formData.get("closingPrayer"),
+    openingHymnNumber: formData.get("openingHymnNumber"),
 
-  openingHymnNumber: formData.get("openingHymnNumber"),
+    openingHymnTitle: formData.get("openingHymnTitle"),
 
-  openingHymnTitle:formData.get("openingHymnTitle"),
+    sacramentHymnNumber: formData.get("sacramentHymnNumber"),
 
-  sacramentHymnNumber:formData.get("sacramentHymnNumber"),
+    sacramentHymnTitle: formData.get("sacramentHymnTitle"),
 
-  sacramentHymnTitle:formData.get("sacramentHymnTitle"),
+    closingHymnNumber: formData.get("closingHymnNumber"),
 
-  closingHymnNumber:formData.get("closingHymnNumber"),
+    closingHymnTitle: formData.get("closingHymnTitle"),
 
-  closingHymnTitle:formData.get("closingHymnTitle"),
-
-  stakeBusiness:formData.get("stakeBusiness"),
-};
+    stakeBusiness: formData.get("stakeBusiness"),
+  };
 
   const parsed = MeetingFormSchema.safeParse(raw);
 
   if (!parsed.success) {
-    console.log("ESTE ES EL parsed.error sin flatten COMPA: " + parsed.error)
-    console.log(z.flattenError(parsed.error).fieldErrors);
     return {
       errors: z.flattenError(parsed.error).fieldErrors,
-      message:
-        "Missing or invalid fields. Failed to create meeting.",
+      message: "Missing or invalid fields. Failed to create meeting.",
     };
   }
 
-const {
-  date,
-  meetingType,
+  const {
+    date,
+    meetingType,
 
-  presiding,
-  conducting,
+    presiding,
+    conducting,
 
-  openingPrayer,
-  closingPrayer,
+    openingPrayer,
+    closingPrayer,
 
-  openingHymnNumber,
-  openingHymnTitle,
+    openingHymnNumber,
+    openingHymnTitle,
 
-  sacramentHymnNumber,
-  sacramentHymnTitle,
+    sacramentHymnNumber,
+    sacramentHymnTitle,
 
-  closingHymnNumber,
-  closingHymnTitle,
+    closingHymnNumber,
+    closingHymnTitle,
 
-  stakeBusiness,
-} = parsed.data;
+    stakeBusiness,
+  } = parsed.data;
 
-const announcements = String(
-  formData.get("announcements") ?? ""
-)
-  .split("\n")
-  .map((a) => a.trim())
-  .filter(Boolean);
+  const announcements = String(formData.get("announcements") ?? "")
+    .split("\n")
+    .map((a) => a.trim())
+    .filter(Boolean);
 
-const openingHymn: Hymn = {
-  number: openingHymnNumber,
-  title: openingHymnTitle,
-};
+  const openingHymn: Hymn = {
+    number: openingHymnNumber,
+    title: openingHymnTitle,
+  };
 
-const sacramentHymn: Hymn = {
-  number: sacramentHymnNumber,
-  title: sacramentHymnTitle,
-};
+  const sacramentHymn: Hymn = {
+    number: sacramentHymnNumber,
+    title: sacramentHymnTitle,
+  };
 
-const closingHymn: Hymn = {
-  number: closingHymnNumber,
-  title: closingHymnTitle,
-};
+  const closingHymn: Hymn = {
+    number: closingHymnNumber,
+    title: closingHymnTitle,
+  };
 
-const speaker1: SpeakerItem = 
-  {
-    name: String(
-      formData.get("speaker1Name") ?? ""
-    ),
-    topic: String(
-      formData.get("speaker1Topic") ?? ""
-    ),
+  const speaker1: SpeakerItem = {
+    name: String(formData.get("speaker1Name") ?? ""),
+    topic: String(formData.get("speaker1Topic") ?? ""),
     type: "speaker",
   };
 
-const speaker2: SpeakerItem =
-  {
-    name: String(
-      formData.get("speaker2Name") ?? ""
-    ),
-    topic: String(
-      formData.get("speaker2Topic") ?? ""
-    ),
+  const speaker2: SpeakerItem = {
+    name: String(formData.get("speaker2Name") ?? ""),
+    topic: String(formData.get("speaker2Topic") ?? ""),
     type: "speaker",
   };
 
-const speaker3: SpeakerItem =
-  {
-    name: String(
-      formData.get("speaker3Name") ?? ""
-    ),
-    topic: String(
-      formData.get("speaker3Topic") ?? ""
-    ),
+  const speaker3: SpeakerItem = {
+    name: String(formData.get("speaker3Name") ?? ""),
+    topic: String(formData.get("speaker3Topic") ?? ""),
     type: "speaker",
   };
 
-const speakers: SpeakerItem[] = [speaker1, speaker2, speaker3]
+  const speakers: SpeakerItem[] = [speaker1, speaker2, speaker3];
 
-const wardBusiness: WardBusinessItem[] =
-  String(
-    formData.get("wardBusiness") ?? ""
+  const wardBusiness: WardBusinessItem[] = String(
+    formData.get("wardBusiness") ?? "",
   )
     .split("\n")
     .map((item) => ({
       description: item.trim(),
     }))
-    .filter(
-      (item) =>
-        item.description.length > 0
-    );
-
-    console.log("BUENO LOCO VOY A HACER EL QUERY PRESTA ATENCION")
+    .filter((item) => item.description.length > 0);
 
   try {
     await sql.query(
@@ -285,18 +259,15 @@ const wardBusiness: WardBusinessItem[] =
 
         closingHymn,
         closingPrayer,
-      ]
+      ],
     );
-  } catch(error) {
-        console.log("NO MAL AHI NO PUDE HACERLO PA!")
-        console.log("!!Este es el error: " + error)
-    return {
-      message:
-        "Database Error: Failed to create meeting.",
-    };
+  } catch (error) {
+    console.log(error);
+
+    throw new Error("Database Error: Unable to create meeting.");
   }
 
-          console.log("AH SI? HOY SI MAMI")
+  console.log("Created project succesfuly!");
 
   revalidatePath("/meetings");
   redirect("/meetings");
@@ -304,8 +275,9 @@ const wardBusiness: WardBusinessItem[] =
 
 export async function updateMeeting(
   id: number,
-  formData: FormData
-) {
+  prevState: State,
+  formData: FormData,
+): Promise<State> {
   const raw = {
     date: formData.get("date"),
     meetingType: formData.get("meetingType"),
@@ -316,143 +288,160 @@ export async function updateMeeting(
     openingPrayer: formData.get("openingPrayer"),
     closingPrayer: formData.get("closingPrayer"),
 
+    openingHymnNumber: formData.get("openingHymnNumber"),
+
+    openingHymnTitle: formData.get("openingHymnTitle"),
+
+    sacramentHymnNumber: formData.get("sacramentHymnNumber"),
+
+    sacramentHymnTitle: formData.get("sacramentHymnTitle"),
+
+    closingHymnNumber: formData.get("closingHymnNumber"),
+
+    closingHymnTitle: formData.get("closingHymnTitle"),
+
     stakeBusiness: formData.get("stakeBusiness"),
   };
 
-  const parsed =
-    MeetingFormSchema.safeParse(raw);
+  const parsed = MeetingFormSchema.safeParse(raw);
 
   if (!parsed.success) {
-    throw new Error(
-      "Invalid meeting input."
-    );
+    return {
+      errors: z.flattenError(parsed.error).fieldErrors,
+
+      message: "Missing or invalid fields. Failed to update meeting.",
+    };
   }
 
-  const data = parsed.data;
+  const {
+    date,
+    meetingType,
 
-  const announcements = String(
-    formData.get("announcements") ?? ""
-  )
-    .split("\n")
+    presiding,
+    conducting,
+
+    openingPrayer,
+    closingPrayer,
+
+    openingHymnNumber,
+    openingHymnTitle,
+
+    sacramentHymnNumber,
+    sacramentHymnTitle,
+
+    closingHymnNumber,
+    closingHymnTitle,
+
+    stakeBusiness,
+  } = parsed.data;
+
+  const announcements = String(formData.get("announcements") ?? "")
+    .split(",")
     .map((a) => a.trim())
     .filter(Boolean);
 
-  const openingHymn = {
-    number: Number(
-      formData.get("openingHymnNumber")
-    ),
-    title: String(
-      formData.get("openingHymnTitle")
-    ),
+  const openingHymn: Hymn = {
+    number: openingHymnNumber,
+    title: openingHymnTitle,
   };
 
-  const sacramentHymn = {
-    number: Number(
-      formData.get("sacramentHymnNumber")
-    ),
-    title: String(
-      formData.get("sacramentHymnTitle")
-    ),
+  const sacramentHymn: Hymn = {
+    number: sacramentHymnNumber,
+    title: sacramentHymnTitle,
   };
 
-  const closingHymn = {
-    number: Number(
-      formData.get("closingHymnNumber")
-    ),
-    title: String(
-      formData.get("closingHymnTitle")
-    ),
+  const closingHymn: Hymn = {
+    number: closingHymnNumber,
+    title: closingHymnTitle,
   };
 
-  const speakers = [
-    {
-      name: String(
-        formData.get("speaker1Name") ?? ""
-      ),
-      topic: String(
-        formData.get("speaker1Topic") ?? ""
-      ),
-    },
-    {
-      name: String(
-        formData.get("speaker2Name") ?? ""
-      ),
-      topic: String(
-        formData.get("speaker2Topic") ?? ""
-      ),
-    },
-    {
-      name: String(
-        formData.get("speaker3Name") ?? ""
-      ),
-      topic: String(
-        formData.get("speaker3Topic") ?? ""
-      ),
-    },
-  ].filter(
-    (speaker) =>
-      speaker.name.trim().length > 0
+  const speaker1: SpeakerItem = {
+    name: String(formData.get("speaker1Name") ?? ""),
+    topic: String(formData.get("speaker1Topic") ?? ""),
+    type: "speaker",
+  };
+
+  const speaker2: SpeakerItem = {
+    name: String(formData.get("speaker2Name") ?? ""),
+    topic: String(formData.get("speaker2Topic") ?? ""),
+    type: "speaker",
+  };
+
+  const speaker3: SpeakerItem = {
+    name: String(formData.get("speaker3Name") ?? ""),
+    topic: String(formData.get("speaker3Topic") ?? ""),
+    type: "speaker",
+  };
+
+  const speakers: SpeakerItem[] = [speaker1, speaker2, speaker3].filter(
+    (speaker) => speaker.name.trim().length > 0,
   );
 
-  const wardBusiness = String(
-    formData.get("wardBusiness") ?? ""
+  const wardBusiness: WardBusinessItem[] = String(
+    formData.get("wardBusiness") ?? "",
   )
-    .split("\n")
+    .split(",")
     .map((item) => ({
       description: item.trim(),
     }))
-    .filter(
-      (item) =>
-        item.description.length > 0
+    .filter((item) => item.description.length > 0);
+
+  try {
+    await sql.query(
+      `
+      UPDATE meetings
+      SET
+        date = $1,
+        meeting_type = $2,
+        presiding = $3,
+        conducting = $4,
+
+        announcements = $5,
+
+        opening_hymn = $6,
+        opening_prayer = $7,
+
+        ward_business = $8,
+        stake_business = $9,
+
+        sacrament_hymn = $10,
+        speakers = $11,
+
+        closing_hymn = $12,
+        closing_prayer = $13
+
+      WHERE id = $14
+      `,
+      [
+        date,
+        meetingType,
+        presiding,
+        conducting,
+
+        announcements,
+
+        JSON.stringify(openingHymn),
+        openingPrayer,
+
+        JSON.stringify(wardBusiness),
+
+        stakeBusiness ?? false,
+
+        JSON.stringify(sacramentHymn),
+        JSON.stringify(speakers),
+
+        JSON.stringify(closingHymn),
+
+        closingPrayer,
+
+        id,
+      ],
     );
+  } catch (error) {
+    console.log(error);
 
-  await sql.query(
-    `
-    UPDATE meetings
-    SET
-      date = $1,
-      meeting_type = $2,
-      presiding = $3,
-      conducting = $4,
-
-      announcements = $5,
-
-      opening_hymn = $6,
-      opening_prayer = $7,
-
-      ward_business = $8,
-      stake_business = $9,
-
-      sacrament_hymn = $10,
-      speakers = $11,
-
-      closing_hymn = $12,
-      closing_prayer = $13
-    WHERE id = $14
-    `,
-    [
-      data.date,
-      data.meetingType,
-      data.presiding,
-      data.conducting,
-
-      announcements,
-
-      openingHymn,
-      data.openingPrayer,
-
-      wardBusiness,
-      data.stakeBusiness ?? false,
-
-      sacramentHymn,
-      speakers,
-
-      closingHymn,
-      data.closingPrayer,
-
-      id,
-    ]
-  );
+    throw new Error("Database Error: Unable to update meeting.");
+  }
 
   revalidatePath("/meetings");
   revalidatePath(`/meetings/${id}`);
