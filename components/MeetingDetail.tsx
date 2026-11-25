@@ -1,4 +1,5 @@
 import { getMeetingById } from "@/lib/meetings-db";
+import Link from "next/link";
 
 interface MeetingDetailProps {
   id: number;
@@ -32,8 +33,8 @@ export default async function MeetingDetail({
             <h4 className="font-semibold">{meetingTypeCapitalized} Meeting</h4>
         </div> 
         <div className="flex flex-row gap-6">
-        <button className="secondary-button">Edit</button>
-        <button className="secondary-button">Delete</button>
+        <Link className="secondary-button" href={`/meetings/${meeting.id}/edit`}>Edit</Link>
+        <Link className="secondary-button"href={`/meetings/${meeting.id}/delete`}>Delete</Link>
         </div>
       </div>
 <div className="border rounded-lg overflow-hidden">

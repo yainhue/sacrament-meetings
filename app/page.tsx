@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link";
 
 
 export default function Home() {
@@ -13,7 +14,7 @@ export default function Home() {
       <h1>Sacrament Meeting Planner</h1>
       <p>Plan, organize, and view sacrament meeting details</p>
       </div>
-      <button className="primary-button">+ Add Meeting</button>
+      <Link className="primary-button " href={"/meetings/new"}>+ Add Meeting</Link>
     </div>
 
     <div className="h-100"></div>

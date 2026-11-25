@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-/* :root {
-  --header-text: black;
-  --header-bg: bg-gray-400;
-}
-
-@theme{
---header-bg: var( --header-bg);
-} */
-
-
 @layer base {
 
   body {
