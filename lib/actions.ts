@@ -248,16 +248,18 @@ export async function createMeeting(
 
         announcements,
 
-        openingHymn,
+        JSON.stringify(openingHymn),
         openingPrayer,
 
-        wardBusiness,
+        JSON.stringify(wardBusiness),
+
         stakeBusiness ?? false,
 
-        sacramentHymn,
-        speakers,
+        JSON.stringify(sacramentHymn),
+        JSON.stringify(speakers),
 
-        closingHymn,
+        JSON.stringify(closingHymn),
+
         closingPrayer,
       ],
     );
